@@ -11,6 +11,7 @@ function setup() {
   c.drop(gotFile);
   videoButton = createButton('video');
   videoButton.mousePressed(streamVideo);
+  videoButton.hide();
 }
 
 function draw() {
@@ -41,6 +42,7 @@ function streamVideo () {
   video.size(320, 240);
   snapButton = createButton('identify');
   snapButton.mousePressed(takeSnap);
+  videoButton.hide();
 }
 
 function takeSnap() {
