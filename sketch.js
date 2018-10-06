@@ -1,3 +1,7 @@
+var video;
+var videoButton;
+var snapButton;
+var breadImage;
 
 function setup() {
   // create canvas
@@ -5,6 +9,8 @@ function setup() {
   background(100);
   // Add an event for when a file is dropped onto the canvas
   c.drop(gotFile);
+  videoButton = createButton('video');
+  videoButton.mousePressed(streamVideo);
 }
 
 function draw() {
@@ -23,7 +29,21 @@ function gotFile(file) {
     var img = createImg(file.data).hide();
     // Draw the image onto the canvas
     image(img, 0, 0, width, height);
+    // Set the data as the bread image to identify
+    breadImage = file.data;
   } else {
     println('Not an image file!');
   }
+}
+
+function streamVideo () {
+  video = createCapture(VIDEO);
+  video.size(320, 240);
+  snapButton = createButton('identify');
+  snapButton.mousePressed(takeSnap);
+}
+
+function takeSnap() {
+  var p5Img = video.get();
+  console.log(p5Img);
 }
