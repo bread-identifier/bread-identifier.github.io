@@ -2,10 +2,38 @@ var video;
 var videoButton;
 var snapButton;
 var breadImage;
+var breadURLs;
+
+let featureExtractor;
+let classifer;
 
 // Put any asynchronous data loading in preload to complete before "setup" is run
 function preload() {
-  breadURLs = loadJSON('./breadURLs.json');
+  loadJSON('./breadURLs.json', function(results) {
+    breadURLs = results; 
+  });
+  // Extract the already learned features from MobileNet
+  featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
+  // Create a new classifier using those features and give the video we want to use
+  classifier = featureExtractor.classification();
+}
+
+function modelReady() {
+  console.log('model ready');
+  console.log(classifier);
+  breadURLs.forEach(function(bread) {
+    try {
+      let img = new Image(224, 224);
+      img.src = bread.url;
+      img.onload = () => {
+        classifier.addImage(img, bread.label, () => {
+          console.log("added img");
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  })
 }
 
 function setup() {
@@ -16,7 +44,8 @@ function setup() {
   c.drop(gotFile);
   videoButton = createButton('video');
   videoButton.mousePressed(streamVideo);
-  console.log(breadURLs);
+  let breadPromises = [];
+  
 }
 
 function draw() {
