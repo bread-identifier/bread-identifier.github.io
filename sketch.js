@@ -27,6 +27,10 @@ function modelReady() {
   Promise.all(breadPromises).then((val) => {
     console.log("At the end of promises");
     console.log(val);
+    // Retrain the network
+    classifier.train(function(lossValue) {
+      console.log('Loss is', lossValue)
+    });
   });
 }
 
@@ -37,14 +41,14 @@ function trainOnBread(bread) {
     img.addEventListener('load', function imgOnLoad() {
       classifier.addImage(this, bread.label, () => {
           console.log("adding bread");
-          resolve(this);
+          resolve("Success: " + this.src);
         });
     });
 
     // When there's an error during load, reject the promise
     img.addEventListener('error', function imgOnError() {
         console.log("oh no");
-        resolve("Error occured");
+        resolve("Error occured: " + this.src);
     });
 
     img.src = bread.url;
