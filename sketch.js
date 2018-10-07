@@ -22,26 +22,36 @@ function modelReady() {
   console.log('model ready');
   console.log(classifier);
   let breadPromises = breadURLs.map(function(bread) {
-    return trainOnBread(bread).then((result) => {
-      console.log("adding bead");
-      return result;
-    });
+    return trainOnBread(bread);
   });
-  Promise.all(breadPromises).then((resolve) => {
-    console.log("All breads loaded");
+  Promise.all(breadPromises).then((val) => {
+    console.log("At the end of promises");
+    console.log(val);
   });
 }
 
 function trainOnBread(bread) {
-  return new Promise((resolve, reject) => {
+  const imgPromise = new Promise((resolve, reject) => {
     let img = new Image(224, 224);
-      img.src = bread.url;
-      img.onload = () => {
-        classifier.addImage(img, bread.label, () => {
-          resolve("added img");
+    // When image is loaded, resolve the promise
+    img.addEventListener('load', function imgOnLoad() {
+      classifier.addImage(this, bread.label, () => {
+          console.log("adding bread");
+          resolve(this);
         });
-      }
-  })
+    });
+
+    // When there's an error during load, reject the promise
+    img.addEventListener('error', function imgOnError() {
+        console.log("oh no");
+        resolve("Error occured");
+    });
+
+    img.src = bread.url;
+
+  });
+
+  return imgPromise;
 } 
 
 function setup() {
