@@ -39,7 +39,8 @@ function trainOnBread(bread) {
     let img = new Image(224, 224);
     // When image is loaded, resolve the promise
     img.addEventListener('load', function imgOnLoad() {
-      classifier.addImage(this, bread.label, () => {
+      console.log(bread);
+      classifier.addImage(this, bread.name, () => {
           console.log("adding bread");
           resolve("Success: " + this.src);
         });
