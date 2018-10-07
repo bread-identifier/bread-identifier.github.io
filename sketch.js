@@ -21,20 +21,28 @@ function preload() {
 function modelReady() {
   console.log('model ready');
   console.log(classifier);
-  breadURLs.forEach(function(bread) {
-    try {
-      let img = new Image(224, 224);
+  let breadPromises = breadURLs.map(function(bread) {
+    return trainOnBread(bread).then((result) => {
+      console.log("adding bead");
+      return result;
+    });
+  });
+  Promise.all(breadPromises).then((resolve) => {
+    console.log("All breads loaded");
+  });
+}
+
+function trainOnBread(bread) {
+  return new Promise((resolve, reject) => {
+    let img = new Image(224, 224);
       img.src = bread.url;
       img.onload = () => {
         classifier.addImage(img, bread.label, () => {
-          console.log("added img");
+          resolve("added img");
         });
       }
-    } catch (err) {
-      console.log(err);
-    }
   })
-}
+} 
 
 function setup() {
   // create canvas
