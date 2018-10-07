@@ -3,6 +3,11 @@ var videoButton;
 var snapButton;
 var breadImage;
 
+// Put any asynchronous data loading in preload to complete before "setup" is run
+function preload() {
+  breadURLs = loadJSON('./breadURLs.json');
+}
+
 function setup() {
   // create canvas
   var c = createCanvas(710, 400);
@@ -11,7 +16,7 @@ function setup() {
   c.drop(gotFile);
   videoButton = createButton('video');
   videoButton.mousePressed(streamVideo);
-  videoButton.hide();
+  console.log(breadURLs);
 }
 
 function draw() {
@@ -42,7 +47,6 @@ function streamVideo () {
   video.size(320, 240);
   snapButton = createButton('identify');
   snapButton.mousePressed(takeSnap);
-  videoButton.hide();
 }
 
 function takeSnap() {
