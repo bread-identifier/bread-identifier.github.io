@@ -3,6 +3,7 @@ var videoButton;
 var snapButton;
 var breadImage;
 var breadURLs;
+var label = "";
 
 let featureExtractor;
 let classifer;
@@ -16,6 +17,27 @@ function preload() {
   featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
   // Create a new classifier using those features and give the video we want to use
   classifier = featureExtractor.classification();
+}
+
+function setup() {
+  // create canvas
+  var c = createCanvas(710, 400);
+  background(100);
+  // Add an event for when a file is dropped onto the canvas
+  c.drop(gotFile);
+  videoButton = createButton('video');
+  videoButton.mousePressed(streamVideo);
+  let breadPromises = [];
+  
+}
+
+function draw() {
+  fill(255);
+  noStroke();
+  textSize(24);
+  textAlign(CENTER);
+  text('Drag an image file onto the canvas.', width/2, height/2);
+  noLoop();
 }
 
 function modelReady() {
@@ -59,40 +81,67 @@ function trainOnBread(bread) {
   return imgPromise;
 } 
 
-function setup() {
-  // create canvas
-  var c = createCanvas(710, 400);
-  background(100);
-  // Add an event for when a file is dropped onto the canvas
-  c.drop(gotFile);
-  videoButton = createButton('video');
-  videoButton.mousePressed(streamVideo);
-  let breadPromises = [];
-  
-}
-
-function draw() {
-  fill(255);
-  noStroke();
-  textSize(24);
-  textAlign(CENTER);
-  text('Drag an image file onto the canvas.', width/2, height/2);
-  noLoop();
-}
+// function gotFile(file) {
+//   // If it's an image file
+//   if (file.type === 'image') {
+//     // Create an image DOM element but don't show it
+//     var img = createImg(file.data).hide();
+//     // Draw the image onto the canvas
+//     image(img, 0, 0, width, height);
+//     // Set the data as the bread image to identify
+//     breadImage = file.data;
+//   } else {
+//     println('Not an image file!');
+//   }
+// }
 
 function gotFile(file) {
   // If it's an image file
   if (file.type === 'image') {
     // Create an image DOM element but don't show it
     var img = createImg(file.data).hide();
+    var domImg = new Image(224, 224);
+    domImg.onload = () => {
+      classifier.classify(domImg, (err, results) => {
+        label = results;
+        console.log(results);
+        background(0);
+        image(img, 0, 0, width, height);
+
+        noStroke();
+        fill("red")
+        textSize(28);
+        textAlign(CENTER, CENTER);
+        text(label, 300, 300);
+      });
+    }
+
+    domImg.src = file.data;
+
     // Draw the image onto the canvas
-    image(img, 0, 0, width, height);
-    // Set the data as the bread image to identify
-    breadImage = file.data;
+
   } else {
     println('Not an image file!');
   }
 }
+
+// function classifyImage(url, labelName) {
+//   return new Promise(function (resolve, reject) {
+
+//     var img = new Image(224, 224);
+//     img.onload = () => {
+//       classifier.classify(img, (err, results) => {
+//         console.log(results);
+//         resolve(url)
+//       });
+//       // this might need to be moved
+//     }
+//     img.onerror = () => reject(url);
+
+//     img.src = url;
+//   })
+// }
+
 
 function streamVideo () {
   video = createCapture(VIDEO);
