@@ -4,14 +4,36 @@ var snapButton;
 var breadImage;
 var breadURLs;
 var label = "";
+var loadState = 'loading';
+var displayText = '';
+var displayImg;
+var trainingCounter = 0;
 
 let featureExtractor;
 let classifer;
+
+const display = {
+  loading: {
+    text: 'loading...',
+    img: ''
+  },
+  training: {
+    text: 'thinking about bread...',
+    img: ''
+  },
+  ready: {
+    text: 'drop bread here',
+    img: ''
+  }
+};
 
 // Put any asynchronous data loading in preload to complete before "setup" is run
 function preload() {
   loadJSON('./breadURLs.json', function(results) {
     breadURLs = results; 
+    display.loading.img = loadImage(breadURLs[Math.floor(Math.random()*breadURLs.length)].url);
+    display.training.img = loadImage(breadURLs[Math.floor(Math.random()*breadURLs.length)].url);
+    display.ready.img = loadImage(breadURLs[Math.floor(Math.random()*breadURLs.length)].url);
   });
   // Extract the already learned features from MobileNet
   featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
@@ -21,23 +43,44 @@ function preload() {
 
 function setup() {
   // create canvas
-  var c = createCanvas(710, 400);
+  var c = createCanvas(600, 600);
   background(100);
   // Add an event for when a file is dropped onto the canvas
   c.drop(gotFile);
   videoButton = createButton('video');
-  videoButton.mousePressed(streamVideo);
-  let breadPromises = [];
-  
+  videoButton.mousePressed(streamVideo); 
 }
 
 function draw() {
-  fill(255);
+  fill("red")
   noStroke();
+  //var stateImg = loadImg(display[loadState.img]);
   textSize(24);
-  textAlign(CENTER);
-  text('Drag an image file onto the canvas.', width/2, height/2);
-  noLoop();
+  textAlign(CENTER, CENTER);
+  // Displays the image at its actual size at point (0,0)
+  image(display[loadState].img, 0, 0);
+  text(display[loadState].text, width/2, height/2);
+  if (loadState == 'loading') {
+    //draw a loading bar
+    stroke("white");
+    noFill();
+    strokeWeight(1);
+    rect(200, 320, 200, 15);
+
+    noStroke();
+    fill("lightblue");
+    let percent = map(trainingCounter, 0, 1760, 0, 1);
+    rect(202, 322, 190 * percent, 12);
+  } else if (loadState == 'training') {
+
+  } else if (loadState == 'ready') {
+    c.drop(gotFile);
+    fill(255);
+    noStroke();
+    textSize(24);
+    textAlign(CENTER);
+    noLoop();
+  }
 }
 
 function modelReady() {
@@ -49,9 +92,11 @@ function modelReady() {
   Promise.all(breadPromises).then((val) => {
     console.log("At the end of promises");
     console.log(val);
+    loadState = 'training';
     // Retrain the network
     classifier.train(function(lossValue) {
       console.log('Loss is', lossValue)
+      loadState = 'ready';
     });
   });
 }
@@ -61,8 +106,8 @@ function trainOnBread(bread) {
     let img = new Image(224, 224);
     // When image is loaded, resolve the promise
     img.addEventListener('load', function imgOnLoad() {
-      console.log(bread);
       classifier.addImage(this, bread.name, () => {
+          trainingCounter++;
           console.log("adding bread");
           resolve("Success: " + this.src);
         });
@@ -81,27 +126,12 @@ function trainOnBread(bread) {
   return imgPromise;
 } 
 
-// function gotFile(file) {
-//   // If it's an image file
-//   if (file.type === 'image') {
-//     // Create an image DOM element but don't show it
-//     var img = createImg(file.data).hide();
-//     // Draw the image onto the canvas
-//     image(img, 0, 0, width, height);
-//     // Set the data as the bread image to identify
-//     breadImage = file.data;
-//   } else {
-//     println('Not an image file!');
-//   }
-// }
-
 function gotFile(file) {
   // If it's an image file
   if (file.type === 'image') {
     // Create an image DOM element but don't show it
-    var img = createImg(file.data).hide();
-    var domImg = new Image(224, 224);
-    domImg.onload = () => {
+    var classImg = new Image(224, 224);
+    classImg.onload = () => {
       classifier.classify(domImg, (err, results) => {
         label = results;
         console.log(results);
@@ -116,7 +146,7 @@ function gotFile(file) {
       });
     }
 
-    domImg.src = file.data;
+    classImg.src = file.data;
 
     // Draw the image onto the canvas
 
@@ -124,23 +154,6 @@ function gotFile(file) {
     println('Not an image file!');
   }
 }
-
-// function classifyImage(url, labelName) {
-//   return new Promise(function (resolve, reject) {
-
-//     var img = new Image(224, 224);
-//     img.onload = () => {
-//       classifier.classify(img, (err, results) => {
-//         console.log(results);
-//         resolve(url)
-//       });
-//       // this might need to be moved
-//     }
-//     img.onerror = () => reject(url);
-
-//     img.src = url;
-//   })
-// }
 
 
 function streamVideo () {
