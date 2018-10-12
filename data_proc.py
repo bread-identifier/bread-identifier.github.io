@@ -1,20 +1,18 @@
+import os
 import json
 import random
-from pathlib import Path
 
-with open('breadURLs.json', 'r') as f:
-    breads = json.load(f)
+path = "./data"
 
-results = []
+result = []
+for root,d_names,f_names in os.walk(path):
+    for f in f_names:
+        result.append({"name" : os.path.basename(root), "url": os.path.join(root, f)})
 
-for bread in breads:
-    my_file = Path(bread["url"])
-    if my_file.is_file():
-        results.append(bread)
-
-random.shuffle(results)
+print(len(result))
+random.shuffle(result)
 
 with open('breadURLs.json', 'w') as outfile:
-    json.dump(results, outfile)
+    json.dump(result, outfile)
 
 print("Finished processing json")
